@@ -1,6 +1,6 @@
 # Brick E1 – Cloud Object Storage
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/your-org/modern-gis-bricks/tree/main/bricks/E1-cloud-object-storage)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/modern-gis/e1-cloud-native-files/tree/main)
 
 **Part of Modern GIS Bricks**  
 *Learn to upload local GIS files, convert them to cloud-native formats, and write them back to object storage.*
