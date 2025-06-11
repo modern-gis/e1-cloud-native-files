@@ -1,9 +1,14 @@
+# .gitpod.yml
 image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: uv pip install -r requirements.txt
-    command: jupyter lab --ip=0.0.0.0 --port=8888
+  - init: pip install --no-cache-dir -r requirements.txt
+    command: |
+      # start MinIO in the background
+      minio server /data --console-address ":9001" &
+      # then start Jupyter Lab
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
 
 ports:
   - port: 8888
