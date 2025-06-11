@@ -1,0 +1,5 @@
+pytest
+otter-grader
+jupyterlab
+duckdb
+rasterio

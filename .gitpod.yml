@@ -1,0 +1,14 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: uv pip install -r requirements.txt
+    command: jupyter lab --ip=0.0.0.0 --port=8888
+
+ports:
+  - port: 8888
+    onOpen: open-preview
+  - port: 9000
+    onOpen: ignore
+  - port: 9001
+    onOpen: open-preview
