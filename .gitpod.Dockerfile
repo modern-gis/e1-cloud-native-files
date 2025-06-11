@@ -1,33 +1,32 @@
-# .gitpod.Dockerfile
-# Use slim Python 3.11 base
 FROM python:3.11-slim
 
-# Install system deps for GDAL, build tools, wget/unzip
+# ─── Install git & GDAL deps ─────────────────────────────────────────────────
 RUN apt-get update \
- && apt-get install -y \
+ && apt-get install -y --no-install-recommends \
+      git \             # ← ensure git is here for Gitpod
       gdal-bin \
       libgdal-dev \
-      build-essential \
-      wget \
-      unzip \
- && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Install MinIO server + client
+# ─── MinIO server ─────────────────────────────────────────────────────────────
 RUN wget https://dl.min.io/server/minio/release/linux-amd64/minio \
-  && chmod +x minio && mv minio /usr/local/bin/ \
-  && wget https://dl.min.io/client/mc/release/linux-amd64/mc \
-  && chmod +x mc && mv mc /usr/local/bin/
+     -O /usr/local/bin/minio \
+ && chmod +x /usr/local/bin/minio
 
-# Install your Python CLI (uv) and any other PyPI deps
-RUN pip install uv
+# ─── Python packages ───────────────────────────────────────────────────────────
+RUN pip install --no-cache-dir \
+      fsspec \
+      s3fs \
+      rasterio \
+      geopandas \
+      rio-cogeo \
+      pyarrow \
+      python-geohash
 
-# Create a data dir for MinIO
+# ─── MinIO data volume & ports ────────────────────────────────────────────────
 RUN mkdir -p /data
-
-# Expose S3 & console ports
 EXPOSE 9000 9001
 
-# By default, start MinIO and drop into a shell
+# ─── Launch MinIO then give you a shell ───────────────────────────────────────
 ENTRYPOINT ["sh","-lc"]
 CMD     ["minio server /data --console-address \":9001\" & bash"]
