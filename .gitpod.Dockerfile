@@ -1,14 +1,14 @@
 # .gitpod.Dockerfile
 FROM python:3.11-slim
 
-# 1. Install git (for Gitpod), wget (for fetching MinIO), and GDAL dependencies
+# 1. Install git (for Gitpod), wget (for fetching MinIO), and build tools for C extensions
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       git \
       wget \
       ca-certificates \
-      gdal-bin \
-      libgdal-dev \
+      build-essential \
+      python3-dev \
  && rm -rf /var/lib/apt/lists/*
 
 # 2. Download and install MinIO server
