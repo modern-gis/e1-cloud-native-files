@@ -2,22 +2,13 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: pip install --no-cache-dir -r requirements.txt
-    before: |
-      # start MinIO bound to 0.0.0.0 on both API & console ports
-      minio server /data \
-        --address 0.0.0.0:9000 \
-        --console-address 0.0.0.0:9001 \
-        &
-
+  - init: |
+      # Install Python deps (including JupyterLab)
+      pip install --no-cache-dir -r requirements.txt
     command: |
-      # then start Jupyter Lab
+      # Launch JupyterLab
       jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
 
 ports:
   - port: 8888
     onOpen: open-preview
-  - port: 9000
-    onOpen: open-preview     # MinIO API
-  - port: 9001
-    onOpen: open-preview     # MinIO Console
