@@ -1,0 +1,14 @@
+{
+  "bounds": [
+    -123.0,
+    45.0,
+    -120.0,
+    48.0
+  ],
+  "tile_size": {
+    "x": 512,
+    "y": 512
+  },
+  "compression": "DEFLATE",
+  "overviews": []
+}
