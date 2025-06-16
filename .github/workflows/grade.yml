@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure outputs dir exists
+        run: mkdir -p tests/outputs
+
       - name: Checkout hidden tests
         if: env.HIDDEN_REPO_URL
         env:
@@ -27,6 +30,17 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Install notebook runner
+        run: pip install jupyter nbconvert
+
+      - name: Execute lab notebook
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute notebook.ipynb \
+            --ExecutePreprocessor.timeout=600 \
+            --output executed.ipynb
 
       - id: pytest
         name: Run tests
