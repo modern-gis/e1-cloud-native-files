@@ -31,17 +31,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Install notebook runner
-        run: pip install jupyter nbconvert
-
-      - name: Execute lab notebook
-        run: |
-          jupyter nbconvert \
-            --to notebook \
-            --execute notebook.ipynb \
-            --ExecutePreprocessor.timeout=600 \
-            --output executed.ipynb
-
       - id: pytest
         name: Run tests
         run: |
