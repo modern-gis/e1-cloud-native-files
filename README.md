@@ -1,4 +1,4 @@
-````markdown
+
 # Brick E1 – Cloud Object Storage
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/modern-gis/e1-cloud-native-files)
@@ -15,8 +15,6 @@ After you purchase the course, you’ll receive a **one-time enrollment code** b
 2. At the **project root**, create a file named  
    ```text
    enrollment_code.txt
-````
-
 3. Paste **exactly** your one-time code into that file (no extra whitespace).
 4. Run through the notebook, commit your changes, and open a PR.
 
