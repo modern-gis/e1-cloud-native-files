@@ -75,7 +75,8 @@ jobs:
           RECIPIENT_EMAIL: ${{ steps.get-recipient.outputs.recipient_email }}
         run: |
           echo "🎯 Issuing badge to: $RECIPIENT_EMAIL"
-          URL=$(curl -s -X POST https://api.badgr.io/v2/badgeclasses/$BADGE_ID/issue \
+          echo "🔐 Token length: ${#BADGR_TOKEN}"
+          RESPONSE=$(curl -s -X POST https://api.badgr.io/v2/badgeclasses/$BADGE_ID/issue \
             -H "Authorization: Bearer $BADGR_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{
@@ -83,10 +84,20 @@ jobs:
                     "identity": "'"$RECIPIENT_EMAIL"'",
                     "type": "email"
                   }
-                }' \
-            | jq -r '.result[0].assertionRef.assertionUrl')
-          echo "🏷️ badge_url=$URL"
-          echo "badge_url=$URL" >> "$GITHUB_OUTPUT"
+                }')
+          echo "🧾 Raw API response:"
+          echo "$RESPONSE"
+
+          URL=$(echo "$RESPONSE" | jq -r '.result[0].assertionRef.assertionUrl')
+          echo "🏷️ Parsed badge URL: $URL"
+
+          if [ "$URL" != "null" ] && [ -n "$URL" ]; then
+            echo "✅ Badge issued successfully."
+            echo "badge_url=$URL" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ No badge URL returned. Investigate response above."
+          fi
+
 
       - name: Post result summary
         run: |
