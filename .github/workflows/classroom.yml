@@ -93,13 +93,13 @@ jobs:
           fi
 
       - name: Comment on commit with badge
-        if: steps.issue_badge.outputs.badge_url != ''
+        if: steps.issue_badge.outputs.badge_url != '' && steps.issue_badge.outputs.badge_url != 'null'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_PAT: ${{ secrets.PAT_FOR_COMMENTS }}
         run: |
           COMMIT_SHA=${{ github.sha }}
           COMMENT="🎉 **All tests passed!**\n\nClaim your badge here:\n${{ steps.issue_badge.outputs.badge_url }}"
-          curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" \
+          curl -s -X POST -H "Authorization: Bearer $COMMENT_PAT" \
                -H "Accept: application/vnd.github+json" \
                https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/comments \
                -d "{\"body\": \"$COMMENT\"}"
