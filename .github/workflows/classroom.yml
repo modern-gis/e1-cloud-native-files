@@ -1,5 +1,8 @@
 name: Autograde
+
 on:
+  push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -10,6 +13,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -76,12 +80,23 @@ jobs:
                     "type": "email"
                   }
                 }' \
-          | jq -r '.result[0].assertionRef.assertionUrl')
+            | jq -r '.result[0].assertionRef.assertionUrl')
           echo "badge_url=$URL" >> "$GITHUB_OUTPUT"
 
+      - name: Post result summary
+        run: |
+          echo "### ✅ Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.pytest.outputs.result }}" = "0" ]; then
+            echo "- All tests passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Some tests failed. Please fix and push again." >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Comment on PR
+        if: github.event_name == 'pull_request' && steps.issue_badge.outputs.badge_url != ''
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |
-            ${{ steps.pytest.outputs.result == '0' && ':tada: **All tests passed!** Claim your badge here:' || ':x: Tests failed.' }}
+            :tada: **All tests passed!**  
+            🎓 Claim your badge here:  
             ${{ steps.issue_badge.outputs.badge_url }}
