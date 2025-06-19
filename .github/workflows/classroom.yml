@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
   pull-requests: write
 
 jobs:
@@ -17,17 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ensure outputs dir exists
-        run: mkdir -p tests/outputs
-
-      - name: Checkout hidden tests (safe copy)
-        if: env.HIDDEN_REPO_URL
-        env:
-          GH_PAT: ${{ secrets.GH_PAT_HIDDEN }}
-        run: |
-          git clone https://$GH_PAT@${{ env.HIDDEN_REPO_URL }} hidden_tests
-          cp -r hidden_tests/tests/* tests/
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -35,89 +23,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - id: pytest
-        name: Run tests
+      - name: Run all tests (public + hidden)
+        id: pytest
         run: |
-          pytest -q tests hidden_tests | tee result.txt
+          pytest -q tests/public tests/hidden | tee result.txt
           echo "result=$?" >> "$GITHUB_OUTPUT"
 
-      - name: Get Badgr access token
-        id: get-badgr-token
-        run: |
-          TOKEN=$(curl -s -X POST https://api.badgr.io/o/token \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=password" \
-            -d "username=${{ secrets.BADGR_USERNAME }}" \
-            -d "password=${{ secrets.BADGR_PASSWORD }}" \
-            -d "scope=rw:issuer" \
-            | jq -r .access_token)
-          echo "badgr_token=$TOKEN" >> "$GITHUB_OUTPUT"
-
-      - name: Read student email
-        id: get-recipient
-        run: |
-          echo "🔍 Checking student_email.txt:"
-          cat student_email.txt || echo "File not found!"
-          if [ ! -s student_email.txt ]; then
-            echo "❌ ERROR: student_email.txt is empty or missing." >&2
-            exit 1
-          fi
-          EMAIL=$(head -n1 student_email.txt | tr -d '\r\n')
-          echo "✅ Found email: $EMAIL"
-          echo "recipient_email=$EMAIL" >> "$GITHUB_OUTPUT"
-
-      - name: Issue Badgr badge
-        id: issue_badge
+      - name: Output badge proof
         if: steps.pytest.outputs.result == '0'
-        env:
-          BADGR_TOKEN:     ${{ steps.get-badgr-token.outputs.badgr_token }}
-          BADGE_ID:        ${{ secrets.BADGR_BADGE_ID }}
-          RECIPIENT_EMAIL: ${{ steps.get-recipient.outputs.recipient_email }}
         run: |
-          echo "🎯 Issuing badge to: $RECIPIENT_EMAIL"
-          echo "🔐 Token length: ${#BADGR_TOKEN}"
-          RESPONSE=$(curl -s -X POST https://api.badgr.io/v2/badgeclasses/$BADGE_ID/issue \
-            -H "Authorization: Bearer $BADGR_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{
-                  "recipient": {
-                    "identity": "'"$RECIPIENT_EMAIL"'",
-                    "type": "email"
-                  }
-                }')
-          echo "🧾 Raw API response:"
-          echo "$RESPONSE"
-
-          URL=$(echo "$RESPONSE" | jq -r '.result[0].assertionRef.assertionUrl')
-          echo "🏷️ Parsed badge URL: $URL"
-
-          if [ "$URL" != "null" ] && [ -n "$URL" ]; then
-            echo "✅ Badge issued successfully."
-            echo "badge_url=$URL" >> "$GITHUB_OUTPUT"
-          else
-            echo "❌ No badge URL returned. Investigate response above."
-          fi
-
-
-      - name: Post result summary
-        run: |
-          echo "### ✅ Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.pytest.outputs.result }}" = "0" ]; then
-            echo "- ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- ❌ Some tests failed. Please fix and push again." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Comment on commit with badge
-        if: steps.issue_badge.outputs.badge_url && steps.issue_badge.outputs.badge_url != 'null'
-        env:
-          COMMENT_PAT: ${{ secrets.PAT_FOR_COMMENTS }}
-        run: |
-          COMMIT_SHA=${{ github.sha }}
-          COMMENT="🎉 **All tests passed!**\n\nClaim your badge here:\n${{ steps.issue_badge.outputs.badge_url }}"
-          echo "💬 Posting commit comment for $COMMIT_SHA"
-          curl -s -X POST -H "Authorization: Bearer $COMMENT_PAT" \
-               -H "Accept: application/vnd.github+json" \
-               https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/comments \
-               -d "{\"body\": \"$COMMENT\"}"
-
+          PROOF="brick-e1-$(echo ${{ github.actor }} | sha256sum | cut -c1-6)-$(date +%s)"
+          echo "🎓 Badge Proof Code: $PROOF"
+          echo "$PROOF" > badge_proof.txt
