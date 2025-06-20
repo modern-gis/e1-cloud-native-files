@@ -8,6 +8,7 @@ rio-cogeo>=5.4.1
 # Object store client
 obstore>=0.6.0
 fsspec
+s3fs
 
 # Vector & Parquet
 geopandas>=1.1.0
